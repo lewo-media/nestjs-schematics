@@ -2,14 +2,12 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { <%= classify(className) %> } from './<%= name %>';
 
 describe('<%= classify(className) %>', () => {
-  let provider: <%= classify(className) %>;
+    let provider: <%= classify(className) %>;
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [<%= classify(className) %>],
-    }).compile();
+    beforeEach(async () => {
+        const { unit } = await TestBed.solitary(<%= classify(className) %>).compile();
 
-    provider = module.get<<%= classify(className) %>>(<%= classify(className) %>);
+        provider = unit;
   });
 
   it('should be defined', () => {

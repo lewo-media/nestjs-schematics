@@ -1,20 +1,18 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { <%= classify(name) %>Controller } from './<%= name %>.controller';
-import { <%= classify(name) %>Service } from './<%= name %>.service';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { TestBed } from '@suites/unit';
+import { <%= classify(name) %>Controller } from './<%= name %>.controller.js';
+import { <%= classify(name) %>Service } from './<%= name %>.service.js';
 
 describe('<%= classify(name) %>Controller', () => {
-  let controller: <%= classify(name) %>Controller;
+    let controller: <%= classify(name) %>Controller;
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      controllers: [<%= classify(name) %>Controller],
-      providers: [<%= classify(name) %>Service],
-    }).compile();
+    beforeAll(async () => {
+        const { unit } = await TestBed.sociable(<%= classify(name) %>Controller).expose(<%= classify(name) %>Service).compile();
 
-    controller = module.get<<%= classify(name) %>Controller>(<%= classify(name) %>Controller);
-  });
+        controller = unit;
+    });
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
-  });
+    it('should be defined', () => {
+        expect(controller).toBeDefined();
+    });
 });

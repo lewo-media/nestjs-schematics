@@ -1,7 +1,7 @@
 {
-  "name": "@nestjs/schematics",
+  "name": "@lewo-media/nestjs-schematics",
   "version": "10.2.3",
-  "description": "Nest - modern, fast, powerful node.js web framework (@schematics)",
+  "description": "Custom NestJS schematics for creating NestJS applications",
   "main": "dist/index.js",
   "files": [
     "dist/**/*"
@@ -35,11 +35,10 @@
     "Kamil Mysliwiec",
     "John Biundo"
   ],
-  "license": "MIT",
   "bugs": {
-    "url": "https://github.com/nestjs/schematics/issues"
+    "url": "https://github.com/lewo-media/nestjs-schematics/issues"
   },
-  "homepage": "https://github.com/nestjs/schematics#readme",
+  "homepage": "https://github.com/lewo-media/nestjs-schematics#readme",
   "dependencies": {
     "@angular-devkit/core": "17.3.11",
     "@angular-devkit/schematics": "17.3.11",
@@ -95,5 +94,6 @@
   },
   "lint-staged": {
     "**/*.{ts,json}": []
-  }
+  },
+  "packageManager": "pnpm@9.12.3+sha512.cce0f9de9c5a7c95bef944169cc5dfe8741abfb145078c0d508b868056848a87c81e626246cb60967cbd7fd29a6c062ef73ff840d96b3c86c40ac92cf4a813ee"
 }

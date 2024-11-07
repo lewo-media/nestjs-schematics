@@ -1,28 +1,23 @@
-import { Injectable } from '@nestjs/common';<% if (crud && type !== 'graphql-code-first' && type !== 'graphql-schema-first') { %>
-import { Create<%= singular(classify(name)) %>Dto } from './dto/create-<%= singular(name) %>.dto';
-import { Update<%= singular(classify(name)) %>Dto } from './dto/update-<%= singular(name) %>.dto';<% } else if (crud) { %>
-import { Create<%= singular(classify(name)) %>Input } from './dto/create-<%= singular(name) %>.input';
-import { Update<%= singular(classify(name)) %>Input } from './dto/update-<%= singular(name) %>.input';<% } %>
+import { Injectable, Logger } from '@nestjs/common';<% if (crud) { %>
+import type { EntityManager } from 'typeorm';
+import { <%= singular(classify(name)) %>Entity } from './entity/<%= singular(name) %>.entity.js';
+import { Create<%= singular(classify(name)) %>Dto } from './dto/create-<%= singular(name) %>.dto.js';
+import { Update<%= singular(classify(name)) %>Dto } from './dto/update-<%= singular(name) %>.dto.js';<% } %>
 
 @Injectable()
-export class <%= classify(name) %>Service {<% if (crud) { %>
-  create(<% if (type !== 'graphql-code-first' && type !== 'graphql-schema-first') { %>create<%= singular(classify(name)) %>Dto: Create<%= singular(classify(name)) %>Dto<% } else { %>create<%= singular(classify(name)) %>Input: Create<%= singular(classify(name)) %>Input<% } %>) {
-    return 'This action adds a new <%= lowercased(singular(classify(name))) %>';
-  }
+export class <%= classify(name) %>Service {
+    private readonly logger = new Logger(<%= classify(name) %>Service.name);
 
-  findAll() {
-    return `This action returns all <%= lowercased(classify(name)) %>`;
-  }
+    <% if (crud) { %>
+    public create(em: EntityManager, data: Create<%= singular(classify(name)) %>Dto): Promise<<%= singular(classify(name)) %>Entity> {
+        return em.save(new <%= singular(classify(name)) %>Entity(data));
+    }
 
-  findOne(id: number) {
-    return `This action returns a #${id} <%= lowercased(singular(classify(name))) %>`;
-  }
+    public async update(em: EntityManager, id: number, data: Update<%= singular(classify(name)) %>Dto): Promise<<%= singular(classify(name)) %>Entity> {
+        const <%= lowercased(name) %> = await em.findOneByOrFail(<%= singular(classify(name)) %>Entity, { id });
 
-  update(id: number, <% if (type !== 'graphql-code-first' && type !== 'graphql-schema-first') { %>update<%= singular(classify(name)) %>Dto: Update<%= singular(classify(name)) %>Dto<% } else { %>update<%= singular(classify(name)) %>Input: Update<%= singular(classify(name)) %>Input<% } %>) {
-    return `This action updates a #${id} <%= lowercased(singular(classify(name))) %>`;
-  }
+        // TODO: Modify the entity, you shouldn't use Object.assign for this and instead set fields individually
 
-  remove(id: number) {
-    return `This action removes a #${id} <%= lowercased(singular(classify(name))) %>`;
-  }
+        return em.save(<%= lowercased(name) %>);
+    }
 <% } %>}

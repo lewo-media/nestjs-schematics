@@ -1,63 +1,53 @@
-<% if (crud && type === 'rest') { %>import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';<%
-} else if (crud && type === 'microservice') { %>import { Controller } from '@nestjs/common';
-import { MessagePattern, Payload } from '@nestjs/microservices';<%
-} else { %>import { Controller } from '@nestjs/common';<%
-} %>
-import { <%= classify(name) %>Service } from './<%= name %>.service';<% if (crud) { %>
-import { Create<%= singular(classify(name)) %>Dto } from './dto/create-<%= singular(name) %>.dto';
-import { Update<%= singular(classify(name)) %>Dto } from './dto/update-<%= singular(name) %>.dto';<% } %>
+<% if (crud) { %>import { Controller, Get, Post, Body, Patch, Param, Delete, Query, ParseIntPipe } from '@nestjs/common';
+import { FindRestApiService } from '../shared/find-rest-api/find-rest-api.service.js';<% } %>
+import { <%= classify(name) %>Service } from './<%= name %>.service.js';<% if (crud) { %>
+import { <%= singular(classify(name)) %>Entity } from './entity/<%= singular(name) %>.entity.js';
+import { <%= singular(classify(name)) %>Dto } from './dto/<%= singular(name) %>.dto.js';
+import { Create<%= singular(classify(name)) %>Dto } from './dto/create-<%= singular(name) %>.dto.js';
+import { Update<%= singular(classify(name)) %>Dto } from './dto/update-<%= singular(name) %>.dto.js';
+import type { FindOneDto } from '../shared/find-rest-api/dto/find-one.dto.js';
+import type { FindManyDto } from '../shared/find-rest-api/dto/find-many.dto.js';
+import { InjectRepository } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
+import type { Repository } from 'typeorm';<% } %>
 
-<% if (type === 'rest') { %>@Controller('<%= dasherize(name) %>')<% } else { %>@Controller()<% } %>
+@Controller('<%= dasherize(name) %>s')
 export class <%= classify(name) %>Controller {
-  constructor(private readonly <%= lowercased(name) %>Service: <%= classify(name) %>Service) {}<% if (type === 'rest' && crud) { %>
+    constructor(
+        private readonly dataSource: DataSource,
+        private readonly <%= lowercased(name) %>Service: <%= classify(name) %>Service<% if (crud) { %>,
+        private readonly findRestApiService: FindRestApiService,
+        @InjectRepository(<%= singular(classify(name)) %>Entity)
+        private readonly <%= lowercased(name) %>Repository: Repository<<%= singular(classify(name)) %>Entity><% } %>
+    ) {}<% if (crud) { %>
 
-  @Post()
-  create(@Body() create<%= singular(classify(name)) %>Dto: Create<%= singular(classify(name)) %>Dto) {
-    return this.<%= lowercased(name) %>Service.create(create<%= singular(classify(name)) %>Dto);
-  }
+    @Post()
+    public create(@Body() data: Create<%= singular(classify(name)) %>Dto): Promise<<%= singular(classify(name)) %>Dto> {
+        return this.dataSource.transaction((em) => this.<%= lowercased(name) %>Service.create(em, data));
+    }
 
-  @Get()
-  findAll() {
-    return this.<%= lowercased(name) %>Service.findAll();
-  }
+    @Get()
+    public findAll(@Query() data: FindManyDto<<%= singular(classify(name)) %>Dto>): Promise<<%= singular(classify(name)) %>Dto[]> {
+        return this.findRestApiService.findAll(<%= singular(classify(name)) %>Entity, data);
+    }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.<%= lowercased(name) %>Service.findOne(+id);
-  }
+    @Get('count')
+    public count(@Query() data: FindManyDto<<%= singular(classify(name)) %>Dto>): Promise<number> {
+        return this.findRestApiService.count(<%= singular(classify(name)) %>Entity, data);
+    }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() update<%= singular(classify(name)) %>Dto: Update<%= singular(classify(name)) %>Dto) {
-    return this.<%= lowercased(name) %>Service.update(+id, update<%= singular(classify(name)) %>Dto);
-  }
+    @Get(':id')
+    public findOne(@Param('id', ParseIntPipe) id: number, @Query() data: FindOneDto<<%= singular(classify(name)) %>Dto>): Promise<<%= singular(classify(name)) %>Dto> {
+        return this.findRestApiService.findOne(<%= singular(classify(name)) %>Entity, { id }, data);
+    }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.<%= lowercased(name) %>Service.remove(+id);
-  }<% } else if (type === 'microservice' && crud) { %>
+    @Patch(':id')
+    public update(@Param('id', ParseIntPipe) id: number, @Body() data: Update<%= singular(classify(name)) %>Dto): Promise<<%= singular(classify(name)) %>Dto> {
+        return this.dataSource.transaction((em) => this.<%= lowercased(name) %>Service.update(em, data));
+    }
 
-  @MessagePattern('create<%= singular(classify(name)) %>')
-  create(@Payload() create<%= singular(classify(name)) %>Dto: Create<%= singular(classify(name)) %>Dto) {
-    return this.<%= lowercased(name) %>Service.create(create<%= singular(classify(name)) %>Dto);
-  }
-
-  @MessagePattern('findAll<%= classify(name) %>')
-  findAll() {
-    return this.<%= lowercased(name) %>Service.findAll();
-  }
-
-  @MessagePattern('findOne<%= singular(classify(name)) %>')
-  findOne(@Payload() id: number) {
-    return this.<%= lowercased(name) %>Service.findOne(id);
-  }
-
-  @MessagePattern('update<%= singular(classify(name)) %>')
-  update(@Payload() update<%= singular(classify(name)) %>Dto: Update<%= singular(classify(name)) %>Dto) {
-    return this.<%= lowercased(name) %>Service.update(update<%= singular(classify(name)) %>Dto.id, update<%= singular(classify(name)) %>Dto);
-  }
-
-  @MessagePattern('remove<%= singular(classify(name)) %>')
-  remove(@Payload() id: number) {
-    return this.<%= lowercased(name) %>Service.remove(id);
-  }<% } %>
+    @Delete(':id')
+    public async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
+        return this.dataSource.transaction((em) => em.delete(<%= singular(classify(name)) %>Entity, { id }));
+    }<% } %>
 }
